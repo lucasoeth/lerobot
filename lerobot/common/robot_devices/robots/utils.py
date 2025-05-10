@@ -25,6 +25,7 @@ from lerobot.common.robot_devices.robots.configs import (
     So100RobotConfig,
     So101RobotConfig,
     StretchRobotConfig,
+    PiperRobotConfig,
 )
 
 
@@ -78,6 +79,11 @@ def make_robot_from_config(config: RobotConfig):
         from lerobot.common.robot_devices.robots.mobile_manipulator import MobileManipulator
 
         return MobileManipulator(config)
+    
+    elif isinstance(config, PiperRobotConfig):
+        from lerobot.common.robot_devices.robots.piper import PiperRobot
+
+        return PiperRobot(config)
     else:
         from lerobot.common.robot_devices.robots.stretch import StretchRobot
 

@@ -27,6 +27,7 @@ from lerobot.common.robot_devices.motors.configs import (
     DynamixelMotorsBusConfig,
     FeetechMotorsBusConfig,
     MotorsBusConfig,
+    PiperMotorsBusConfig
 )
 
 
@@ -506,7 +507,7 @@ class So100RobotConfig(ManipulatorRobotConfig):
     leader_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "main": FeetechMotorsBusConfig(
-                port="/dev/tty.usbmodem58760431091",
+                port="/dev/tty.usbmodem58FD0171431",
                 motors={
                     # name: (index, model)
                     "shoulder_pan": [1, "sts3215"],
@@ -520,10 +521,58 @@ class So100RobotConfig(ManipulatorRobotConfig):
         }
     )
 
-    follower_arms: dict[str, MotorsBusConfig] = field(
+    # follower_arm: dict[str, MotorsBusConfig] = field(
+    #     default_factory=lambda: {
+    #         "main": PiperMotorsBusConfig(
+    #             can_name="can0",
+    #             motors={
+    #                 # name: (index, model)
+    #                 "joint_1": [1, "agilex_piper"],
+    #                 "joint_2": [2, "agilex_piper"],
+    #                 "joint_3": [3, "agilex_piper"],
+    #                 "joint_4": [4, "agilex_piper"],
+    #                 "joint_5": [5, "agilex_piper"],
+    #                 "joint_6": [6, "agilex_piper"],
+    #                 "gripper": (7, "agilex_piper"),
+    #             },
+    #         ),
+    #     }
+    # )
+
+    cameras: dict[str, CameraConfig] = field(
+        default_factory=lambda: {
+            "laptop": OpenCVCameraConfig(
+                camera_index=0,
+                fps=30,
+                width=640,
+                height=480,
+            ),
+            "phone": OpenCVCameraConfig(
+                camera_index=1,
+                fps=30,
+                width=640,
+                height=480,
+            ),
+        }
+    )
+
+    mock: bool = False
+
+@RobotConfig.register_subclass("piper")
+@dataclass
+class PiperRobotConfig(RobotConfig):
+    inference_time: bool
+    
+    calibration_dir: str = ".cache/calibration/piper"
+    # `max_relative_target` limits the magnitude of the relative positional target vector for safety purposes.
+    # Set this to a positive scalar to have the same value for all motors, or a list that is the same length as
+    # the number of motors in your follower arms.
+    max_relative_target: int | None = None
+
+    leader_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "main": FeetechMotorsBusConfig(
-                port="/dev/tty.usbmodem585A0076891",
+                port="/dev/tty.usbmodem58FD0171431",
                 motors={
                     # name: (index, model)
                     "shoulder_pan": [1, "sts3215"],
@@ -532,6 +581,24 @@ class So100RobotConfig(ManipulatorRobotConfig):
                     "wrist_flex": [4, "sts3215"],
                     "wrist_roll": [5, "sts3215"],
                     "gripper": [6, "sts3215"],
+                },
+            ),
+        }
+    )
+
+    follower_arm: dict[str, MotorsBusConfig] = field(
+        default_factory=lambda: {
+            "main": PiperMotorsBusConfig(
+                can_name="can0",
+                motors={
+                    # name: (index, model)
+                    "joint_1": [1, "agilex_piper"],
+                    "joint_2": [2, "agilex_piper"],
+                    "joint_3": [3, "agilex_piper"],
+                    "joint_4": [4, "agilex_piper"],
+                    "joint_5": [5, "agilex_piper"],
+                    "joint_6": [6, "agilex_piper"],
+                    "gripper": (7, "agilex_piper"),
                 },
             ),
         }
@@ -554,8 +621,7 @@ class So100RobotConfig(ManipulatorRobotConfig):
         }
     )
 
-    mock: bool = False
-
+    mock: bool = True
 
 @RobotConfig.register_subclass("stretch")
 @dataclass

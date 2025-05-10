@@ -33,6 +33,7 @@ from lerobot.common.robot_devices.robots.configs import ManipulatorRobotConfig
 from lerobot.common.robot_devices.robots.utils import get_arm_id
 from lerobot.common.robot_devices.utils import RobotDeviceAlreadyConnectedError, RobotDeviceNotConnectedError
 
+np.set_printoptions(suppress=True, precision=1)
 
 def ensure_safe_goal_position(
     goal_pos: torch.Tensor, present_pos: torch.Tensor, max_relative_target: float | list[float]
@@ -452,14 +453,17 @@ class ManipulatorRobot:
 
         # Prepare to assign the position of the leader to the follower
         leader_pos = {}
+        follower_goal_pos = {}
         for name in self.leader_arms:
             before_lread_t = time.perf_counter()
             leader_pos[name] = self.leader_arms[name].read("Present_Position")
+            print(f"position: {leader_pos[name]}")
             leader_pos[name] = torch.from_numpy(leader_pos[name])
+            follower_goal_pos[name] = leader_pos[name]
             self.logs[f"read_leader_{name}_pos_dt_s"] = time.perf_counter() - before_lread_t
 
         # Send goal position to the follower
-        follower_goal_pos = {}
+        # follower_goal_pos = {}
         for name in self.follower_arms:
             before_fwrite_t = time.perf_counter()
             goal_pos = leader_pos[name]
@@ -484,6 +488,8 @@ class ManipulatorRobot:
 
         # TODO(rcadene): Add velocity and other info
         # Read follower position
+        old_follower_arms = self.follower_arms
+        self.follower_arms = self.leader_arms
         follower_pos = {}
         for name in self.follower_arms:
             before_fread_t = time.perf_counter()
@@ -504,6 +510,8 @@ class ManipulatorRobot:
             if name in follower_goal_pos:
                 action.append(follower_goal_pos[name])
         action = torch.cat(action)
+
+        self.follower_arms = old_follower_arms
 
         # Capture images from cameras
         images = {}
